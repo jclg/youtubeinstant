@@ -8,7 +8,7 @@
     <title>YouTube Instant</title>
     <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
     <meta http-equiv="Content-Script-Type" content="text/javascript" />
-    <script type="text/javascript" src="ajaxrequest.js"></script>
+    <script type="text/javascript" src="youtubeinstant.js"></script>
   </head>
 
   <body>
@@ -16,7 +16,7 @@
       <div id="main">
         Instant search on YouTube:
         <div id="form_search">
-          <input type="text" id="search" onkeyup="youtubeinstant();" />
+          <input type="text" id="search" />
           <div id="video">
 <?php
    include_once 'youtubeinstant.php';
@@ -25,6 +25,7 @@
         </div>
       </div>
     </div>
+    <script type="text/javascript">youtubeInstant.init();</script>
   </body>
 
 </html>
