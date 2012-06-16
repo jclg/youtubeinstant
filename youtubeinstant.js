@@ -1,11 +1,9 @@
 var youtubeInstant = {
 
-
     init: function() {
-        document.getElementById("search").focus();
-        document.getElementById("search").onkeyup = youtubeInstant.onKey;
+        $("#search").focus();
+        $("#search").keyup(youtubeInstant.throttle(youtubeInstant.onKey, 500));
     },
-
 
     onKey: function(e) {
         var key = (window.event) ? event.keyCode : e.keyCode;
@@ -16,52 +14,35 @@ var youtubeInstant = {
             if (key == noactionkeys[i] || altkey || ctrlkey)
                 return;
         }
-        var search = document.getElementById('search').value;
-        if (search == '')
-            return;
-        var parameters = "search="+search;
-        youtubeInstant.ajax(parameters, "youtubeinstant.php", "POST", "video", "<center><img src='loader.gif'></center>", true);
+
+        var search = $('#search').val();
+        if (search != '') {
+            $('#video').html("<center><img src='loader.gif'></center>")
+            $.post("youtubeinstant.php", {search: search}, youtubeInstant.onReceive);
+        }
     },
 
-
-    ajax: function(parameters, target, method, refreshdiv, loadinghtml, abordprevious) {
-        if (typeof this.req == 'undefined' || !abordprevious)
-            this.req = null;
-        else
-            this.req.abort();
-
-        if (window.XMLHttpRequest) {
-		    this.req = new XMLHttpRequest();
-		    if (this.req.overrideMimeType)
-			    this.req.overrideMimeType('text/xml');
-	    }
-        else if (window.ActiveXObject) {
-		    try {
-			    this.req = new ActiveXObject("Msxml2.XMLHTTP");
-            }
-		    catch (e) {
-			    try {
-				    this.req = new ActiveXObject("Microsoft.XMLHTTP");
-                }
-			    catch (e) {}
-		    }
-        }
-
-        this.req.onreadystatechange = function() {
-		    document.getElementById(refreshdiv).innerHTML = loadinghtml;
-		    if(this.readyState == 4) {
-			    if(this.status == 200)
-				    document.getElementById(refreshdiv).innerHTML  = this.responseText;
-			    else
-				    document.getElementById(refreshdiv).innerHTML="Error: returned status code " + this.status + " " + this.statusText;
-		    }
+    /* http://remysharp.com/2010/07/21/throttling-function-calls/ */
+    throttle: function(f, delay){
+        var timer = null;
+        return function(){
+            var context = this, args = arguments;
+            clearTimeout(timer);
+            timer = window.setTimeout(function(){
+                f.apply(context, args);
+            }, delay || 500);
         };
+    },
 
-        this.req.open(method, target, true);
-        this.req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        this.req.setRequestHeader("Connection", "close");
-
-        this.req.send(parameters);
+    onReceive: function(data) {
+        var video_html = '';
+        if (data['status'] == 'success') {
+            video_html = '<object width="640" height="505"><param name="movie" value="http://www.youtube.com/v/'+data['video_id']+'"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/'+data['video_id']+'" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="505"></embed></object>';
+        }
+        else if (data['status'] == 'no_result') {
+            video_html = 'No result for <b>'+data['query']+'</b> :(<br />'
+        }
+        $('#video').html(video_html);
     }
 
 }
