@@ -18,7 +18,11 @@ var youtubeInstant = {
         var search = $('#search').val();
         if (search != '') {
             $('#video').html("<center><img src='loader.gif'></center>")
-            $.post("youtubeinstant.php", {search: search}, youtubeInstant.onReceive);
+            $.ajax({
+                url : 'https://gdata.youtube.com/feeds/api/videos?q='+search+'&v=2&safeSearch=none&alt=json&max-results=1',
+                dataType : 'jsonp',
+                success : youtubeInstant.onReceive
+            });
         }
     },
 
@@ -36,13 +40,14 @@ var youtubeInstant = {
 
     onReceive: function(data) {
         var video_html = '';
-        if (data['status'] == 'success') {
-            video_html = '<object width="640" height="505"><param name="movie" value="http://www.youtube.com/v/'+data['video_id']+'"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/'+data['video_id']+'" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="505"></embed></object>';
+        if (data['feed']['entry']) {
+            var video_id = data['feed']['entry'][0]['id']['$t'].split(':').pop();
+            $('#video').html('<object width="640" height="505"><param name="movie" value="http://www.youtube.com/v/'+video_id+'"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/'+video_id+'" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="505"></embed></object>');
         }
-        else if (data['status'] == 'no_result') {
-            video_html = 'No result for <b>'+data['query']+'</b> :(<br />'
+        else {
+            var query = data['feed']['title']['$t'].split(':').pop();
+            $('#video').text('No result for '+query+' :(');
         }
-        $('#video').html(video_html);
     }
 
 }
